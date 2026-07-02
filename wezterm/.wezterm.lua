@@ -107,6 +107,183 @@ config.keys = {
   { key = 'r', mods = 'CMD|SHIFT', action = wezterm.action.ReloadConfiguration },
 }
 
+-- Bind Command+Click to open links and file paths
+config.mouse_bindings = {
+  -- Bind 'Up' event of Command-Click to open hyperlinks
+  {
+    event = { Up = { streak = 1, button = 'Left' } },
+    mods = 'CMD',
+    action = wezterm.action.OpenLinkAtMouseCursor,
+  },
+  -- Disable the default 'Down' event of Command-Click so that the cursor does not move
+  {
+    event = { Down = { streak = 1, button = 'Left' } },
+    mods = 'CMD',
+    action = wezterm.action.Nop,
+  },
+}
+
+-- Configure hyperlink rules to detect file paths and lines/columns
+config.hyperlink_rules = wezterm.default_hyperlink_rules()
+
+-- 1. Match: path/to/file:line:col
+table.insert(config.hyperlink_rules, 1, {
+  regex = [[(?:^|\s)((?:/|~/|\./|\.\./|[a-zA-Z0-9_.-]+/)[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*):(\d+):(\d+)\b]],
+  format = 'file://$1#$2:$3',
+})
+
+-- 2. Match: path/to/file:line
+table.insert(config.hyperlink_rules, 2, {
+  regex = [[(?:^|\s)((?:/|~/|\./|\.\./|[a-zA-Z0-9_.-]+/)[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*):(\d+)\b]],
+  format = 'file://$1#$2',
+})
+
+-- 3. Match: standard file path
+table.insert(config.hyperlink_rules, 3, {
+  regex = [[(?:^|\s)((?:/|~/|\./|\.\./|[a-zA-Z0-9_.-]+/)[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*)\b]],
+  format = 'file://$1',
+})
+
+-- Helper to check if file or directory exists
+local function exists(p)
+  local success, _, _ = wezterm.run_child_process { 'test', '-e', p }
+  return success
+end
+
+-- Helper to check if a CLI command exists
+local function is_command_available(cmd)
+  local success, _, _ = wezterm.run_child_process { 'which', cmd }
+  return success
+end
+
+-- Resolve a path extracted from URI to a full absolute path
+local function resolve_path(pane, path)
+  -- 1. Handle home directory path
+  if path:sub(1, 3) == '/~/' then
+    return wezterm.home_dir .. path:sub(3)
+  elseif path:sub(1, 2) == '~/' then
+    return wezterm.home_dir .. path:sub(2)
+  end
+
+  -- 2. If it is already a valid absolute path on the system, return it
+  if path:sub(1, 1) == '/' and exists(path) then
+    return path
+  end
+
+  -- 3. Otherwise, treat it as relative and resolve against pane's working directory
+  local cwd = pane:get_current_working_dir()
+  if cwd then
+    local cwd_path
+    if type(cwd) == 'userdata' or type(cwd) == 'table' then
+      cwd_path = cwd.file_path
+    else
+      local cwd_str = tostring(cwd)
+      if cwd_str:sub(1, 7) == 'file://' then
+        local parsed = wezterm.url.parse(cwd_str)
+        if parsed then
+          cwd_path = parsed.file_path
+        end
+      else
+        cwd_path = cwd_str
+      end
+    end
+
+    if cwd_path then
+      -- Ensure trailing slash
+      if cwd_path:sub(-1) ~= '/' then
+        cwd_path = cwd_path .. '/'
+      end
+
+      -- If path started with a slash (from file:///), strip it
+      local rel_path = path
+      if rel_path:sub(1, 1) == '/' then
+        rel_path = rel_path:sub(2)
+      end
+
+      local resolved = cwd_path .. rel_path
+      if exists(resolved) then
+        return resolved
+      end
+      -- Return resolved even if it doesn't exist as a fallback
+      return resolved
+    end
+  end
+
+  return path
+end
+
+-- Custom open-uri event handler to resolve relative paths and open files in Cursor/VS Code
+wezterm.on('open-uri', function(window, pane, uri)
+  local url = wezterm.url.parse(uri)
+  if url.scheme == 'file' then
+    local path = resolve_path(pane, url.file_path)
+
+    -- Parse line and column from fragment
+    local line, col = nil, nil
+    if url.fragment then
+      line, col = url.fragment:match('^(%d+):?(%d*)$')
+    end
+
+    -- Skip editor opening for binary media files
+    local ext = path:match('%.([^%.]+)$')
+    local is_media_or_binary = false
+    if ext then
+      ext = ext:lower()
+      local binary_exts = {
+        png = true, jpg = true, jpeg = true, gif = true, bmp = true, webp = true, svg = true,
+        pdf = true, zip = true, tar = true, gz = true, dmg = true, mp3 = true, mp4 = true,
+        wav = true, mov = true, avi = true, flac = true, pkg = true, app = true
+      }
+      if binary_exts[ext] then
+        is_media_or_binary = true
+      end
+    end
+
+    if is_media_or_binary then
+      local img_exts = {
+        png = true, jpg = true, jpeg = true, gif = true, bmp = true, webp = true
+      }
+      if img_exts[ext] and not pane:is_alt_screen_active() then
+        -- Render the image directly inline in the terminal!
+        local quoted_path = "'" .. path:gsub("'", "'\\''") .. "'"
+        pane:send_text('wezterm imgcat ' .. quoted_path .. '\n')
+        return false
+      end
+    end
+
+    if not is_media_or_binary then
+      local target = path
+      if line then
+        target = target .. ':' .. line
+        if col and col ~= "" then
+          target = target .. ':' .. col
+        end
+      end
+
+      -- Try Cursor first, then VS Code
+      if is_command_available('cursor') then
+        if line then
+          wezterm.run_child_process { 'cursor', '--goto', target }
+        else
+          wezterm.run_child_process { 'cursor', target }
+        end
+        return false
+      elseif is_command_available('code') then
+        if line then
+          wezterm.run_child_process { 'code', '--goto', target }
+        else
+          wezterm.run_child_process { 'code', target }
+        end
+        return false
+      end
+    end
+
+    -- Fallback to default system 'open' command
+    wezterm.run_child_process { 'open', path }
+    return false
+  end
+end)
+
 -- Global variables to cache network info and prevent UI blocking
 local last_ip_check = 0
 local cached_local_ip = "Offline"
