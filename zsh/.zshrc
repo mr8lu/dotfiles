@@ -9,7 +9,10 @@ alias /cheatsheet="bash ~/.config/cheatsheet.sh | less -R"
 
 # Added by Antigravity
 export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
-export GEMINI_API_KEY="your_gemini_api_key_here"
+# Load local configuration (API keys, secrets, etc.) if it exists
+if [ -f ~/.zshrc.local ]; then
+    source ~/.zshrc.local
+fi
 
 # Initialize Starship prompt
 eval "$(starship init zsh)"
