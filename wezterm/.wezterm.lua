@@ -107,6 +107,9 @@ config.keys = {
   { key = 'r', mods = 'CMD|SHIFT', action = wezterm.action.ReloadConfiguration },
 }
 
+-- Configure CMD as the bypass modifier so CMD+Click bypasses TMUX mouse reporting and opens links directly
+config.bypass_mouse_reporting_modifiers = 'CMD'
+
 -- Bind Command+Click to open links and file paths
 config.mouse_bindings = {
   -- Bind 'Up' event of Command-Click to open hyperlinks
@@ -215,6 +218,12 @@ end
 -- Custom open-uri event handler to resolve relative paths and open files in Cursor/VS Code
 wezterm.on('open-uri', function(window, pane, uri)
   local url = wezterm.url.parse(uri)
+  if not url then
+    -- If parsing fails, explicitly run native macOS 'open' command as fallback
+    wezterm.run_child_process { 'open', uri }
+    return false
+  end
+
   if url.scheme == 'file' then
     local path = resolve_path(pane, url.file_path)
 
@@ -280,6 +289,10 @@ wezterm.on('open-uri', function(window, pane, uri)
 
     -- Fallback to default system 'open' command
     wezterm.run_child_process { 'open', path }
+    return false
+  else
+    -- Explicitly open all non-file links (http, https, mailto, slack, etc.) via macOS system 'open' command
+    wezterm.run_child_process { 'open', uri }
     return false
   end
 end)

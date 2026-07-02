@@ -24,4 +24,7 @@ function insert-newline() {
 zle -N insert-newline
 bindkey '^[[13;2u' insert-newline
 
+# Force terminal hyperlink support (OSC 8) in CLI tools (like gemini-cli) inside tmux
+export FORCE_HYPERLINK=1
+
 
