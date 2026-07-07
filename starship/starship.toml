@@ -1,0 +1,65 @@
+# Bauhaus Starship Configuration (Earthy Muted Tone Edition)
+# Pure geometric color blocks, structured, and low-saturation earthy colors.
+
+format = """
+$time [$directory](bg:cream fg:dark_grey bold)[ ](bg:cream)[$git_branch$git_status](bg:blue fg:cream bold)[ ](bg:blue)$status$cmd_duration $character"""
+
+# This is the "thing that moves with the cursor" (The Shell Right-Prompt)
+right_format = """${custom.full_path}"""
+
+add_newline = false
+
+palette = "earthy_bauhaus"
+
+[palettes.earthy_bauhaus]
+red = "#C05C46"       # Terracotta
+yellow = "#C29B38"    # Ochre
+blue = "#5C7285"      # Slate Blue
+cream = "#E6DFD3"     # Warm Sand/Parchment
+dark_grey = "#1E1B18"  # Warm Earthy Dark Clay
+
+[directory]
+style = "bg:cream fg:dark_grey bold"
+format = " $path "
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+style = "bg:blue fg:cream bold"
+format = " on  $branch "
+
+[git_status]
+style = "bg:blue fg:cream bold"
+format = "[$all_status]($style)"
+
+[character]
+success_symbol = "[■](fg:red bold) "
+error_symbol = "[▲](fg:yellow bold) "
+
+[cmd_duration]
+style = "bg:yellow fg:dark_grey bold"
+format = "[ ](bg:yellow)[took $duration]($style)"
+
+[time]
+disabled = false
+style = "bg:red fg:cream bold"
+format = "[ ](bg:red)[$time]($style)"
+time_format = "%m/%d %R"
+
+[status]
+disabled = false
+style = "bg:yellow fg:dark_grey bold"
+format = "[ ](bg:yellow)[$symbol$status]($style)"
+symbol = "✖ "
+
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true
+
+[custom.full_path]
+command = """python3 -c "import os; p=os.getcwd().replace(os.path.expanduser('~'), '~', 1); l=35; print('…'+p[-(l-1):] if len(p)>l else p)" """
+when = "true"
+style = "fg:blue bold"
+format = "[$output]($style)"

@@ -23,8 +23,9 @@ link_file() {
     fi
 }
 
-# Ensure .config exists
+# Ensure necessary directories exist
 mkdir -p "$HOME/.config"
+mkdir -p "$HOME/.ssh"
 
 # Create symlinks for files
 link_file "$DOTFILES_DIR/vim/.vimrc" "$HOME/.vimrc"
@@ -34,6 +35,12 @@ link_file "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
 link_file "$DOTFILES_DIR/zsh/.zprofile" "$HOME/.zprofile"
 link_file "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
 link_file "$DOTFILES_DIR/git/.gitignore_global" "$HOME/.gitignore_global"
+link_file "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
+link_file "$DOTFILES_DIR/ssh/config" "$HOME/.ssh/config"
+link_file "$DOTFILES_DIR/scripts/notify-teams.sh" "$HOME/notify-teams.sh"
+link_file "$DOTFILES_DIR/scripts/notify-teams-ui.sh" "$HOME/notify-teams-ui.sh"
+link_file "$DOTFILES_DIR/scripts/.teams_webhook_routes.conf" "$HOME/.teams_webhook_routes.conf"
+link_file "$DOTFILES_DIR/scripts/kill_netskope.sh" "$HOME/kill_netskope.sh"
 
 # Create symlinks for directories
 if [ -L "$HOME/.config/nvim" ]; then
