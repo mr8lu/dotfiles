@@ -7,6 +7,10 @@ alias vim="/opt/homebrew/Cellar/vim/9.1.1450/bin/vim"
 alias /help="bash ~/.config/cheatsheet.sh | less -R"
 alias /cheatsheet="bash ~/.config/cheatsheet.sh | less -R"
 
+# Gemini CLI aliases
+alias gcli="gemini -y --no-sandbox"
+alias gcli-safe="gemini -y"
+
 # Added by Antigravity
 export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
 # Load local configuration (API keys, secrets, etc.) if it exists
