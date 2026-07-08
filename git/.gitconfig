@@ -4,6 +4,8 @@
 	excludesfile = ~/.gitignore_global
 [include]
 	path = ~/.gitconfig.local
+[includeIf "gitdir:~/development/work/"]
+	path = ~/.gitconfig.work
 [credential "https://github.com"]
 	helper = 
 	helper = !/opt/homebrew/bin/gh auth git-credential

@@ -11,3 +11,7 @@ fi
 
 
   [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/danipan/.local/bin:$PATH"

@@ -3,7 +3,10 @@
 export PATH=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin:$PATH
 
 alias python="python3"
-alias vim="/opt/homebrew/Cellar/vim/9.1.1450/bin/vim"
+alias vi="nvim"
+alias vim="nvim"
+export EDITOR="nvim"
+export VISUAL="nvim"
 alias /help="bash ~/.config/cheatsheet.sh | less -R"
 alias /cheatsheet="bash ~/.config/cheatsheet.sh | less -R"
 
@@ -31,4 +34,27 @@ bindkey '^[[13;2u' insert-newline
 # Force terminal hyperlink support (OSC 8) in CLI tools (like gemini-cli) inside tmux
 export FORCE_HYPERLINK=1
 
+# Terminal Markdown & Mermaid Rendering Helpers
+alias markdown="glow"
+alias markdown-image="mdcat"
+alias markdown-mermaid="glowm"
 
+# Render and display standalone .mmd or .mermaid files directly in WezTerm
+function mrender() {
+    if [ -z "$1" ]; then
+        echo "Usage: mrender <diagram.mmd>"
+        return 1
+    fi
+    local tmp=$(mktemp).png
+    # Use mermaid-cli to render to a PNG and display it inside WezTerm
+    if mmdc -i "$1" -o "$tmp" -b transparent -t dark &>/dev/null; then
+        wezterm imgcat "$tmp"
+    else
+        echo "Error: Failed to compile Mermaid diagram. Ensure @mermaid-js/mermaid-cli is installed."
+    fi
+    rm -f "$tmp"
+}
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/danipan/.local/bin:$PATH"

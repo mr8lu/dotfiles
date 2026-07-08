@@ -3,64 +3,8 @@ local wezterm = require 'wezterm'
 -- This object will hold the configuration
 local config = wezterm.config_builder()
 
--- Custom Earthy Bauhaus Color Palette (Low-saturation, warm natural earth tones)
-config.colors = {
-  foreground = '#E6DFD3',      -- Warm Sand/Birch Paper
-  background = '#1E1B18',      -- Deep Earthy Charcoal/Clay
-  cursor_bg = '#C05C46',       -- Muted Terracotta Red cursor
-  cursor_fg = '#1E1B18',
-  selection_bg = '#5C7285',    -- Slate/Muted Denim Blue selection
-  selection_fg = '#E6DFD3',
-  scrollbar_thumb = '#C05C46',
-
-  -- Tab bar colors (Earthy tones)
-  tab_bar = {
-    background = '#1E1B18',
-    active_tab = {
-      bg_color = '#C05C46',
-      fg_color = '#E6DFD3',
-      intensity = 'Bold',
-    },
-    inactive_tab = {
-      bg_color = '#1E1B18',
-      fg_color = '#E6DFD3',
-    },
-    inactive_tab_hover = {
-      bg_color = '#5C7285',
-      fg_color = '#E6DFD3',
-    },
-    new_tab = {
-      bg_color = '#1E1B18',
-      fg_color = '#E6DFD3',
-    },
-    new_tab_hover = {
-      bg_color = '#C29B38',
-      fg_color = '#1E1B18',
-    },
-  },
-
-  -- Custom ANSI Palette (Earthy & Low-Saturation)
-  ansi = {
-    '#1E1B18', -- black (warm dark clay)
-    '#C05C46', -- red (terracotta)
-    '#7A8B7B', -- green (sage/olive)
-    '#C29B38', -- yellow (ochre)
-    '#5C7285', -- blue (slate/denim)
-    '#9B7E8C', -- magenta (dusty rose)
-    '#6E8A8F', -- cyan (muted eucalyptus)
-    '#E6DFD3', -- white (sand)
-  },
-  brights = {
-    '#5C544E', -- bright black (warm grey)
-    '#D77B66', -- bright terracotta
-    '#9BB09C', -- bright sage
-    '#DDB35A', -- bright ochre
-    '#7D97AE', -- bright slate
-    '#BC9EAC', -- bright dusty rose
-    '#8FAEB4', -- bright eucalyptus
-    '#F2ECE1', -- bright sand
-  }
-}
+-- Use registered custom color scheme
+config.color_scheme = 'earthy-bauhaus'
 
 -- Font Settings
 config.font_size = 13.0
@@ -68,6 +12,7 @@ config.font_size = 13.0
 -- Window Appearance (Opacity 73% with macOS Blur for warm, natural depth)
 config.window_background_opacity = 0.73
 config.macos_window_background_blur = 15
+config.window_decorations = "RESIZE"
 
 -- Bauhaus Layout Padding (geometric spacing)
 config.window_padding = {

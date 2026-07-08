@@ -1,3 +1,4 @@
+tap "atani/tap"
 tap "aws/tap"
 tap "domt4/autoupdate"
 tap "flipperdevices/flipper"
@@ -32,6 +33,10 @@ brew "gh"
 brew "git"
 # Quickly rewrite git repository history
 brew "git-filter-repo"
+# Beautiful, interactive markdown reader by Charm
+brew "glow"
+# Terminal-first markdown viewer with built-in Mermaid rendering
+brew "glowm"
 # Library for USB device access
 brew "libusb"
 # GNU Privacy Guard (OpenPGP)
@@ -48,6 +53,8 @@ brew "iftop"
 brew "libmagic"
 # CLI utility that generates PDF from Markdown
 brew "md2pdf", link: false
+# Terminal markdown viewer with support for inline images in WezTerm
+brew "mdcat"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Port scanning utility for large networks
@@ -101,6 +108,7 @@ cask "libreoffice"
 # Command-line client for connecting to Snowflake
 cask "snowflake-snowsql"
 npm "@google/gemini-cli"
+npm "@mermaid-js/mermaid-cli"
 npm "aws-azure-login"
 npm "firebase-tools"
 npm "md-to-pdf"

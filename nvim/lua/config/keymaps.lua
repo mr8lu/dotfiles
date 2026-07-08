@@ -5,9 +5,11 @@ map({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsea
 
 -- Better window navigation
 map("n", "<C-h>", "<C-w>h", { desc = "Go to left window" })
+map("n", "<BS>", "<C-w>h", { desc = "Go to left window (Ctrl-h fallback)" })
 map("n", "<C-j>", "<C-w>j", { desc = "Go to lower window" })
 map("n", "<C-k>", "<C-w>k", { desc = "Go to upper window" })
 map("n", "<C-l>", "<C-w>l", { desc = "Go to right window" })
+map("n", "<C-L>", "<C-w>l", { desc = "Go to right window (CSI-u fallback)" })
 
 -- Resize window using <ctrl> arrow keys
 map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase window height" })

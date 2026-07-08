@@ -1,8 +1,6 @@
 Host *
     AddKeysToAgent yes
     UseKeychain yes
-    IdentityFile ~/.ssh/id_rsa
-    IdentityFile ~/.ssh/id_rsa_danipan-deloitte
 
 # Default Github 
 Host github.com
@@ -10,6 +8,7 @@ Host github.com
     User git
     PreferredAuthentications publickey
     IdentityFile ~/.ssh/id_rsa
+    IdentitiesOnly yes
 
 # Deloitte Github
 Host deloitte.github.com
@@ -17,3 +16,4 @@ Host deloitte.github.com
     User git
     PreferredAuthentications publickey
     IdentityFile ~/.ssh/id_rsa_danipan-deloitte
+    IdentitiesOnly yes
