@@ -1,6 +1,7 @@
   [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
 
 export PATH=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home/bin:$PATH
+export PATH=$HOME/go/bin:$PATH
 
 alias python="python3"
 alias vi="nvim"
@@ -58,3 +59,14 @@ function mrender() {
 
 # Added by Antigravity CLI installer
 export PATH="/Users/danipan/.local/bin:$PATH"
+
+# pnpm
+export PNPM_HOME="/Users/danipan/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end
+
+# Force Emacs keybindings on the command line, even with EDITOR=nvim
+bindkey -e
