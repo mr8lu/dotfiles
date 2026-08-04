@@ -17,3 +17,10 @@ Host deloitte.github.com
     PreferredAuthentications publickey
     IdentityFile ~/.ssh/id_rsa_danipan-deloitte
     IdentitiesOnly yes
+# p32h Github
+Host p32h.github.com
+    HostName github.com
+    User git
+    PreferredAuthentications publickey
+    IdentityFile ~/.ssh/id_ed25519_p32h
+    IdentitiesOnly yes

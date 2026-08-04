@@ -26,9 +26,11 @@ link_file() {
 # Ensure necessary directories exist
 mkdir -p "$HOME/.config"
 mkdir -p "$HOME/.ssh"
+mkdir -p "$HOME/.gemini"
 
 # Create symlinks for files
 link_file "$DOTFILES_DIR/vim/.vimrc" "$HOME/.vimrc"
+link_file "$DOTFILES_DIR/.gemini/GEMINI.md" "$HOME/.gemini/GEMINI.md"
 link_file "$DOTFILES_DIR/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
 link_file "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 link_file "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"

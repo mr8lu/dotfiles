@@ -14,3 +14,16 @@
 	helper = !/opt/homebrew/bin/gh auth git-credential
 [url "git@github.com:"]
 	insteadOf = https://github.com/
+
+[includeIf "gitdir:~/development/p32h/"]
+        path = ~/.gitconfig.p32h
+
+[credential "https://git-codecommit.us-east-1.amazonaws.com"]
+	helper = !aws codecommit credential-helper $@
+	UseHttpPath = true
+
+[includeIf "gitdir:~/development/deq/"]
+        path = ~/.gitconfig.deq
+
+[includeIf "gitdir:~/development/work/strand-deq-permitting/"]
+        path = ~/.gitconfig.deq

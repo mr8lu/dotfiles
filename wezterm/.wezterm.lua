@@ -50,6 +50,42 @@ config.keys = {
   { key = 'p', mods = 'CTRL|SHIFT', action = wezterm.action.ActivateCommandPalette },
   -- Command + Shift + R: Explicitly force WezTerm to reload configuration, overriding TMUX/CLI capture
   { key = 'r', mods = 'CMD|SHIFT', action = wezterm.action.ReloadConfiguration },
+  -- Command + V: Smart paste that handles images natively for CLI tools like gemini-cli
+  {
+    key = 'v',
+    mods = 'CMD',
+    action = wezterm.action_callback(function(window, pane)
+      local success, stdout, stderr = wezterm.run_child_process({
+        'osascript', '-e', 'clipboard info'
+      })
+      if success and stdout and (stdout:find('«class PNGf»') or stdout:find('JPEG picture') or stdout:find('TIFF picture') or stdout:find('«class JPEG»') or stdout:find('«class TIFF»')) then
+        local timestamp = os.time()
+        local temp_path = '/tmp/wezterm-paste-' .. timestamp .. '.png'
+        local script = [[
+          try
+            set imageData to the clipboard as «class PNGf»
+            set fileRef to open for access POSIX file "]] .. temp_path .. [[" with write permission
+            write imageData to fileRef
+            close access fileRef
+            return "success"
+          on error errMsg
+            try
+              close access POSIX file "]] .. temp_path .. [["
+            end try
+            return "error"
+          end try
+        ]]
+        local save_success, save_stdout, save_stderr = wezterm.run_child_process({
+          'osascript', '-e', script
+        })
+        if save_success and save_stdout and save_stdout:find('success') then
+          window:perform_action(wezterm.action.SendString('@' .. temp_path), pane)
+          return
+        end
+      end
+      window:perform_action(wezterm.action.PasteFrom('Clipboard'), pane)
+    end)
+  },
 }
 
 -- Configure CMD as the bypass modifier so CMD+Click bypasses TMUX mouse reporting and opens links directly
@@ -71,200 +107,51 @@ config.mouse_bindings = {
   },
 }
 
--- Configure hyperlink rules to detect file paths and lines/columns
-config.hyperlink_rules = wezterm.default_hyperlink_rules()
-
--- 1. Match: path/to/file:line:col
-table.insert(config.hyperlink_rules, 1, {
-  regex = [[(?:^|\s)((?:/|~/|\./|\.\./|[a-zA-Z0-9_.-]+/)[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*):(\d+):(\d+)\b]],
-  format = 'file://$1#$2:$3',
-})
-
--- 2. Match: path/to/file:line
-table.insert(config.hyperlink_rules, 2, {
-  regex = [[(?:^|\s)((?:/|~/|\./|\.\./|[a-zA-Z0-9_.-]+/)[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*):(\d+)\b]],
-  format = 'file://$1#$2',
-})
-
--- 3. Match: standard file path
-table.insert(config.hyperlink_rules, 3, {
-  regex = [[(?:^|\s)((?:/|~/|\./|\.\./|[a-zA-Z0-9_.-]+/)[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*)\b]],
-  format = 'file://$1',
-})
-
--- Helper to check if file or directory exists
-local function exists(p)
-  local success, _, _ = wezterm.run_child_process { 'test', '-e', p }
-  return success
-end
-
--- Helper to check if a CLI command exists
-local function is_command_available(cmd)
-  local success, _, _ = wezterm.run_child_process { 'which', cmd }
-  return success
-end
-
--- Resolve a path extracted from URI to a full absolute path
-local function resolve_path(pane, path)
-  -- 1. Handle home directory path
-  if path:sub(1, 3) == '/~/' then
-    return wezterm.home_dir .. path:sub(3)
-  elseif path:sub(1, 2) == '~/' then
-    return wezterm.home_dir .. path:sub(2)
-  end
-
-  -- 2. If it is already a valid absolute path on the system, return it
-  if path:sub(1, 1) == '/' and exists(path) then
-    return path
-  end
-
-  -- 3. Otherwise, treat it as relative and resolve against pane's working directory
-  local cwd = pane:get_current_working_dir()
-  if cwd then
-    local cwd_path
-    if type(cwd) == 'userdata' or type(cwd) == 'table' then
-      cwd_path = cwd.file_path
-    else
-      local cwd_str = tostring(cwd)
-      if cwd_str:sub(1, 7) == 'file://' then
-        local parsed = wezterm.url.parse(cwd_str)
-        if parsed then
-          cwd_path = parsed.file_path
-        end
-      else
-        cwd_path = cwd_str
-      end
-    end
-
-    if cwd_path then
-      -- Ensure trailing slash
-      if cwd_path:sub(-1) ~= '/' then
-        cwd_path = cwd_path .. '/'
-      end
-
-      -- If path started with a slash (from file:///), strip it
-      local rel_path = path
-      if rel_path:sub(1, 1) == '/' then
-        rel_path = rel_path:sub(2)
-      end
-
-      local resolved = cwd_path .. rel_path
-      if exists(resolved) then
-        return resolved
-      end
-      -- Return resolved even if it doesn't exist as a fallback
-      return resolved
-    end
-  end
-
-  return path
-end
-
--- Custom open-uri event handler to resolve relative paths and open files in Cursor/VS Code
-wezterm.on('open-uri', function(window, pane, uri)
-  local url = wezterm.url.parse(uri)
-  if not url then
-    -- If parsing fails, explicitly run native macOS 'open' command as fallback
-    wezterm.run_child_process { 'open', uri }
-    return false
-  end
-
-  if url.scheme == 'file' then
-    local path = resolve_path(pane, url.file_path)
-
-    -- Parse line and column from fragment
-    local line, col = nil, nil
-    if url.fragment then
-      line, col = url.fragment:match('^(%d+):?(%d*)$')
-    end
-
-    -- Skip editor opening for binary media files
-    local ext = path:match('%.([^%.]+)$')
-    local is_media_or_binary = false
-    if ext then
-      ext = ext:lower()
-      local binary_exts = {
-        png = true, jpg = true, jpeg = true, gif = true, bmp = true, webp = true, svg = true,
-        pdf = true, zip = true, tar = true, gz = true, dmg = true, mp3 = true, mp4 = true,
-        wav = true, mov = true, avi = true, flac = true, pkg = true, app = true
-      }
-      if binary_exts[ext] then
-        is_media_or_binary = true
-      end
-    end
-
-    if is_media_or_binary then
-      local img_exts = {
-        png = true, jpg = true, jpeg = true, gif = true, bmp = true, webp = true
-      }
-      if img_exts[ext] and not pane:is_alt_screen_active() then
-        -- Render the image directly inline in the terminal!
-        local quoted_path = "'" .. path:gsub("'", "'\\''") .. "'"
-        pane:send_text('wezterm imgcat ' .. quoted_path .. '\n')
-        return false
-      end
-    end
-
-    if not is_media_or_binary then
-      local target = path
-      if line then
-        target = target .. ':' .. line
-        if col and col ~= "" then
-          target = target .. ':' .. col
-        end
-      end
-
-      -- Try Cursor first, then VS Code
-      if is_command_available('cursor') then
-        if line then
-          wezterm.run_child_process { 'cursor', '--goto', target }
-        else
-          wezterm.run_child_process { 'cursor', target }
-        end
-        return false
-      elseif is_command_available('code') then
-        if line then
-          wezterm.run_child_process { 'code', '--goto', target }
-        else
-          wezterm.run_child_process { 'code', target }
-        end
-        return false
-      end
-    end
-
-    -- Fallback to default system 'open' command
-    wezterm.run_child_process { 'open', path }
-    return false
-  else
-    -- Explicitly open all non-file links (http, https, mailto, slack, etc.) via macOS system 'open' command
-    wezterm.run_child_process { 'open', uri }
-    return false
-  end
-end)
-
--- Global variables to cache network info and prevent UI blocking
+-- Global variables to cache network & system info and prevent UI blocking
 local last_ip_check = 0
 local cached_local_ip = "Offline"
 local cached_wan_ip = "Offline"
 local ip_check_interval = 60    -- Refresh LAN IP every 60 seconds
-local wan_check_interval = 300   -- Refresh WAN IP every 5 minutes
+local wan_check_interval = 300  -- Refresh WAN IP every 5 minutes
 
--- Helper function to safely read cached files
+local last_stats_check = 0
+local stats_check_interval = 5  -- Refresh Stats every 5 seconds
+local cached_cpu = "--"
+local cached_mem = "--"
+local cached_disk = "--"
+
+-- Helper function to safely read single-line cached files (strips whitespace)
 local function read_file_content(path)
   local file = io.open(path, "r")
   if not file then return nil end
   local content = file:read("*all")
   file:close()
-  return content:gsub("%s+", "") -- strip whitespaces
+  return content:gsub("%s+", "")
 end
 
--- WezTerm Right Status Bar (System Info: Hostname, Battery, Time)
+-- Helper function to read multi-line stats file
+local function read_stats_file(path)
+  local file = io.open(path, "r")
+  if not file then return nil, nil, nil end
+  local line1 = file:read("*l")
+  local disk = file:read("*l")
+  file:close()
+  
+  local cpu = nil
+  local mem = nil
+  if line1 then
+    cpu, mem = line1:match("^(%S+)%s+(.+)$")
+  end
+  
+  return cpu, mem, disk
+end
+
+-- WezTerm Right Status Bar (System Info: CPU, Mem, Disk, Hostname, Battery, Time)
 wezterm.on('update-right-status', function(window, pane)
   local now = os.time()
 
   -- 1. Check Local IP (LAN)
   if now - last_ip_check >= ip_check_interval or cached_local_ip == "Offline" then
-    -- Determine active default gateway interface dynamically
     local success, stdout, _ = wezterm.run_child_process { 'sh', '-c', 'route -n get default | awk \'/interface: / {print $2}\'' }
     if success and stdout then
       local interface = stdout:gsub("%s+", "")
@@ -287,11 +174,22 @@ wezterm.on('update-right-status', function(window, pane)
     wezterm.run_child_process { 'sh', '-c', 'curl -s --max-time 2 https://icanhazip.com > /tmp/wezterm_wan_ip &' }
   end
 
-  -- Read the background-fetched WAN IP from the temporary cache file
   local wan_from_file = read_file_content("/tmp/wezterm_wan_ip")
   if wan_from_file and wan_from_file ~= "" then
     cached_wan_ip = wan_from_file
   end
+
+  -- 3. Trigger CPU/Mem/Disk refresh asynchronously in background
+  if now - last_stats_check >= stats_check_interval then
+    local stats_cmd = [[top -l 1 | awk 'BEGIN { "sysctl -n hw.memsize" | getline bytes; total = sprintf("%.0fG", bytes/1024/1024/1024) } /CPU usage/ {cpu=$3} /PhysMem/ {mem=$2 "/" total " (" $(NF-1) " free)"} END {print cpu " " mem}' > /tmp/wezterm_stats; df -h / | awk 'NR==2 {print $5 " " $4}' >> /tmp/wezterm_stats &]]
+    wezterm.run_child_process { 'sh', '-c', stats_cmd }
+    last_stats_check = now
+  end
+
+  local cpu, mem, disk = read_stats_file("/tmp/wezterm_stats")
+  if cpu then cached_cpu = cpu end
+  if mem then cached_mem = mem end
+  if disk then cached_disk = disk end
 
   local date = wezterm.strftime('%b %-d %H:%M')
   
@@ -310,13 +208,15 @@ wezterm.on('update-right-status', function(window, pane)
 
   window:set_right_status(wezterm.format({
     { Background = { Color = '#1E1B18' } },
-    { Foreground = { Color = '#7A8B7B' } }, -- Sage green matching your Earthy Bauhaus palette
+    { Foreground = { Color = '#C29B38' } }, -- Ochre
+    { Text = ' 🖥️ CPU: ' .. cached_cpu .. ' | 🐏 ' .. cached_mem .. ' | 💾 ' .. cached_disk .. ' ' },
+    { Foreground = { Color = '#7A8B7B' } }, -- Sage green
     { Text = ' 🌐 ' .. cached_local_ip .. ' | ' .. cached_wan_ip .. '  ' },
-    { Foreground = { Color = '#5C7285' } },
+    { Foreground = { Color = '#5C7285' } }, -- Slate Blue
     { Text = '  ' .. wezterm.hostname() .. '  ' },
-    { Foreground = { Color = '#C05C46' } },
+    { Foreground = { Color = '#C05C46' } }, -- Terracotta red
     { Text = '  ' .. battery_info .. '  ' },
-    { Foreground = { Color = '#C29B38' } },
+    { Foreground = { Color = '#C29B38' } }, -- Ochre
     { Text = '  ' .. date .. ' ' },
   }))
 end)
