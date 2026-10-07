@@ -19,7 +19,7 @@
         path = ~/.gitconfig.p32h
 
 [credential "https://git-codecommit.us-east-1.amazonaws.com"]
-	helper = !aws codecommit credential-helper $@
+	helper = 
 	UseHttpPath = true
 
 [includeIf "gitdir:~/development/deq/"]

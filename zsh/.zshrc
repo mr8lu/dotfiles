@@ -6,6 +6,7 @@ export PATH=$HOME/go/bin:$PATH
 alias python="python3"
 alias vi="nvim"
 alias vim="nvim"
+alias ll="ls -lah"
 export EDITOR="nvim"
 export VISUAL="nvim"
 alias /help="bash ~/.config/cheatsheet.sh | less -R"
@@ -71,13 +72,15 @@ _show_gcli_update_warning() {
 gcli() {
     _show_gcli_update_warning
     _check_gcli_update
-    gemini -y --no-sandbox "$@"
+    node "$HOME/.gemini/bin/patch-yolo.js" 2>/dev/null
+    gemini --approval-mode=yolo --no-sandbox "$@"
 }
 
 gcli-safe() {
     _show_gcli_update_warning
     _check_gcli_update
-    gemini -y "$@"
+    node "$HOME/.gemini/bin/patch-yolo.js" 2>/dev/null
+    gemini --approval-mode=yolo "$@"
 }
 
 # Added by Antigravity
