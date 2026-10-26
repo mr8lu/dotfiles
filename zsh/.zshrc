@@ -148,3 +148,16 @@ export USE_VERTEX_AI=true
 
 # kimi-code
 export PATH="/Users/danipan/.kimi-code/bin:$PATH"
+
+ulimit -n 4096
+
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+
+# GEMINI_BASTION_ENV
+export PATH="$HOME/.local/bin:$PATH"
+if [ -f "$HOME/.gemini/.env" ]; then
+  set -a
+  . "$HOME/.gemini/.env"
+  set +a
+fi
+alias h='tmux new-session -A -s harness'

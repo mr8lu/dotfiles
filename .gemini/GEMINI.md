@@ -8,8 +8,8 @@
 - When making technical decisions, do not give much weight to development cost. Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user would experience it as possible. This makes sure you find the real problem so your fix will actually solve it.
 - When end-to-end testing a product, be picky about the UI you see and be obsessed with pixel perfection. If something clearly looks off, even if it is not directly related to what you are doing, try to get it fixed along the way.
+- UI color selection and design work should always strictly consider contrast and be at least 70% inclined with Section 508 compliance (enforcing WCAG AA/AAA contrast ratios for text legibility, selected/highlighted choices, distinct interactive element states, and accessible focus indicators).
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness. If you see one, even if it is not caused by what you are working on right now, still get it fixed.
-- When performing a git push or shipping code changes, always use the 'no-mistakes' pipeline (or skill) to validate and automate the verification of changes before pushing them to any remote target
 
 ## Coding Preference:
 
@@ -24,12 +24,13 @@
 
 - Use PikePDF instead of PyMuPDF for PDF operations and AI solutions
 - Utilize the Polars DataFrame library for Python when needed to optimize speed/quality
+- Avoid using `python-jose` and use `PyJWT` for modern approaches to address security concerns
 
 
 ## Subagent and Environment Preference:
 
 - **ALWAYS** default to using global subagents (`~/.gemini/agents/`) and only use project-level subdirectories (`.gemini/agents/`) when they are available and distinct from the global directory.
-- **ALWAYS** prioritize Gemini CLI as the default agent harness and backend. Do not use Claude or Codex; all agentic tools and proxy gateways (such as Firstmate and `no-mistakes`) must be configured or shimmed to route through `gemini`.
+- **ALWAYS** prioritize Gemini CLI as the default agent harness and backend. Do not use Claude or Codex; all agentic tools and proxy gateways (such as Firstmate) must be configured or shimmed to route through `gemini`.
 
 
 ## Writing
@@ -72,3 +73,9 @@ You have access to custom MS Teams and Outlook notification engines on macOS. Us
   - **How it routes**:
     - The target route must be one or more email addresses.
     - Opens the chat via deep link (`msteams://`) and simulates the Enter key after a short delay (requires Accessibility permissions on macOS).
+
+## Apple Human Interface Guidelines (HIG):
+
+- Reference URL: https://developer.apple.com/design/human-interface-guidelines/
+- Skill: apple-design-hig (installed in ~/.agents/skills/apple-design-hig)
+- Up-to-date Repository & MCP Server: /Users/danipan/development/personal/apple-design-hig (https://github.com/mr8lu/apple-design-hig)
