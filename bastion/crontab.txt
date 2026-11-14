@@ -1,0 +1,2 @@
+0 8 * * * KEEP=5 $HOME/bin/nez-registry-cleanup.sh >> $HOME/logs/nez-registry-cleanup.log 2>&1
+*/15 * * * * $HOME/.tmux/plugins/tmux-resurrect/scripts/save.sh quiet >/dev/null 2>&1

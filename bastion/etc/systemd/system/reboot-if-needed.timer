@@ -1,0 +1,9 @@
+[Unit]
+Description=Nightly reboot-if-needed at 3:30 AM ET
+
+[Timer]
+OnCalendar=*-*-* 03:30 America/New_York
+Persistent=false
+
+[Install]
+WantedBy=timers.target
