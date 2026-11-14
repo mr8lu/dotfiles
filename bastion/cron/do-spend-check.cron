@@ -1,0 +1,2 @@
+# DigitalOcean daily month-to-date spend check (9 AM America/New_York year-round; Ubuntu 24.04 cron 3.0pl1 ignores CRON_TZ on UTC bastion)
+0 13,14 * * * [ "$(TZ=America/New_York date +\%H)" = 09 ] && $HOME/bin/do-spend-check.sh >> $HOME/logs/do-spend-check.log 2>&1
