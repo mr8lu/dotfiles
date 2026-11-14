@@ -6,6 +6,10 @@ My personal dotfiles repository configured with an earthy, muted, Bauhaus-inspir
 
 ```text
 ~/.dotfiles/
+├── bastion/
+│   ├── bin/
+│   │   └── nez-watch.sh      # Cheap 20-minute cron watcher for Grok Bot monitoring
+│   └── crontab.txt           # Bastion cron schedule
 ├── git/
 │   ├── .gitconfig            # Global Git configurations
 │   └── .gitignore_global     # Global Git ignores
@@ -27,6 +31,7 @@ My personal dotfiles repository configured with an earthy, muted, Bauhaus-inspir
 *   **WezTerm:** Configured with an Earthy Bauhaus Color Palette, native macOS blur, and explicit keyboard overrides (e.g., `Command + Left/Right` for line navigation, `Command + Shift + R` for reloading).
 *   **Cheatsheet:** A custom terminal cheatsheet mapped to `Control + Shift + C` in WezTerm, featuring fully spelled-out key labels and ANSI C color codes.
 *   **Symlink Driven:** All dotfiles are symlinked to their native locations, ensuring any edits immediately apply to the environment while being tracked by Git.
+*   **Bastion Monitoring (`bastion/bin/nez-watch.sh`):** Runs every 20 minutes via cron to write a compact state and change summary (`~/state/nez-watch.md` and `~/state/nez-watch.changes.md`) covering open PRs, CI status, tmux `harness` windows, and systemd/reboot status without making LLM calls.
 
 ## 🚀 Installation (New Machine Setup)
 

@@ -1,0 +1,5 @@
+0 8 * * * KEEP=5 $HOME/bin/nez-registry-cleanup.sh >> $HOME/logs/nez-registry-cleanup.log 2>&1
+*/15 * * * * $HOME/.tmux/plugins/tmux-resurrect/scripts/save.sh quiet >/dev/null 2>&1
+# DO spend check, 9 AM America/New_York (bastion cron is UTC and ignores CRON_TZ; guard handles DST)
+0 13,14 * * * [ "$(TZ=America/New_York date +\%H)" = 09 ] && $HOME/bin/do-spend-check.sh >> $HOME/logs/do-spend-check.log 2>&1
+*/20 * * * * $HOME/bin/nez-watch.sh >> $HOME/logs/nez-watch.log 2>&1
