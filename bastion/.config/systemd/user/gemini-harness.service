@@ -1,0 +1,15 @@
+[Unit]
+Description=24/7 Persistent tmux Session for Gemini Agent Harness
+After=network-online.target
+
+[Service]
+Type=forking
+WorkingDirectory=/home/danipan/workspace
+Environment="PATH=/home/danipan/.local/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/danipan/bin/tmux-harness-start.sh
+ExecStop=/usr/bin/tmux kill-session -t harness
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target
